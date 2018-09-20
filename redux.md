@@ -78,7 +78,7 @@ Redux可能消失嗎？或許會<br>
 Actions. Reducers.<br>
 好像有點懂，好像不太懂，話說，他們是怎麼黏在一起的？<br>
 
-**store編排了所有在Redux的moving parts**<br>
+**store協調了所有在Redux的moving parts**<br>
 
 store是Redux的根本，整個應用程式的state都存活在store內。<br>
 所以要開始使用Redux，我們應該建立一個用於包裝state的store。<br>
@@ -115,14 +115,10 @@ export default store;
 ## 開始了解Redux reducers
 雖然initial state對server side rendering(SSR)很有用，在Redux，state必須完全從reducer return
 
-好啦，到底什麼是reducer?
-
+好啦，到底什麼是reducer?<br>
 **reducer就是個javascript的function**<br>
-
 一個reducer function有兩個參數：**current state** 和 **action**（之後我們再來跟action好好深交）<br>
-
 Redux的第三個準則是，state是一成不變的，而且不能隨意改變。<br>
-
 在簡單的React中，我們可以透過setState改變local state，但在Redux我們做不到。<br>
 
 在這個範例裡，我們建立一個簡單的reducer有個initial state作為第一個參數。第二個參數我們置入action，到目前為止，我們的reducer不做任何事只返回initial state。
