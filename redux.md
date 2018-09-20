@@ -2,7 +2,7 @@
 這邊參考Valentino Gagliardi的[React Redux Tutorial for Beginners: The Definitive Guide](https://www.valentinog.com/blog/react-redux-tutorial-beginners/)<br>
 這篇從觀念開始帶入，讓學習者可以反思學習redux的價值和意義而不是盲目跟風。
 
-## 一個最小的React開發環境
+## 一個小小的React開發環境
 Valentino Gagliardi提供了一個建置好了github repo
 ```bash
 git clone https://github.com/valentinogagliardi/webpack-4-quickstart.git
@@ -308,5 +308,67 @@ yarn add babel-plugin-transform-object-rest-spread -D
 > 隨著我們的app變大，reducer也會跟著一起長大。
 > 我們可以將一個大型reducer拆成多個function然後使用[combineReducers](https://redux.js.org/api/combinereducers)讓他們黏在一起
 
-下一節我們要在console中使用Redux，hold住！
+下一節我們要在console中使用Redux！
 
+## Redux store methods
+希望你能和瀏覽器的console一起使用，如此可以更加快速了解Redux的運作。<br>
+Redux是一個小小library(2KB)，Redux store公開了一個簡單的API([Redux store exposes a simple API](https://redux.js.org/api/store))來管理state。最重要的method有：
+
+* getState: 存取目前application的state
+* dispatch: 調度action
+* subscribe: 偵聽state的變化
+
+我們將使用上述method丟到console去玩，<br>
+為此我們必須把先前建立的store和action匯出成全域變數。
+
+在src/js內建立index.js，並更新以下程式碼：
+```javascript
+import store from "../js/store/index";
+import { addArticle } from "../js/actions/index";
+window.store = store;
+window.addArticle = addArticle;
+```
+
+然後打開src下的index.js，把內容清掉並更改成以下程式碼：
+```javascript
+import index from "./js/index"
+```
+現在我們可以打開webpack dev server囉
+```bash
+yarn start
+```
+切換到瀏覽器的 http://localhost:8080/ 並打開F12。<br>
+因為我們之前把sotre作為全域變數匯出，所以我們可以在console上存取它的可用methods<br>
+
+透過讀取目前的state作為開始。<br>
+input:
+```javascript
+store.getState()
+```
+output
+```javascript
+{articles: Array(0)}
+```
+沒有任何articles。事實上我們尚未更新任何的初始化state。<br>
+為了讓事情更有趣，我們透過subscibe來偵聽state，<br>
+subscribe會在action被觸發後執行callback。<br>
+註冊callback透過執行：
+```javascript
+store.subscribe(() => console.log('Look ma, Redux!!'))
+```
+為了改變Redux的state，我們需要執行action：
+```javascript
+store.dispatch( addArticle({ name: 'React Redux Tutorial for Beginners', id: 1 }) )
+```
+在執行上面的code後我們會看到
+```
+Look ma, Redux!!
+```
+為了驗證我們的state已更換，我們執行：
+```javascript
+store.getState()
+```
+然後輸出會是：
+```
+{articles: Array(1)}
+```
