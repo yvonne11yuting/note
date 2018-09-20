@@ -146,9 +146,172 @@ const rootReducer = (state = initialState, action) => state;
 export default rootReducer;
 ```
 
-因為作者說他盡量把它簡單化，所以我們的第一個reducer看起來很蠢，他只return了initial state然後沒做任何事<br>
-下一段要加入action了，應該會開始變有趣囉
+因為作者說他盡量把它簡單化，所以我們的第一個reducer看起來很蠢，他只return了initial state然後沒做任何事。<br>
+下一段要加入action了，應該會開始變有趣囉！
+
+## 開始了解Redux actions
+Redux reducer毫無疑問的是Redux最重要的概念，<br>
+Reducer產生application的state。<br>
+
+但reducer要怎麼知道什麼時候要產生下個state呢？<br>
+改變state的唯一方法是向store發送信號，那個信號就是 **action**。<br>
+"Dispatching an action"(調度action)就是發送信號的過程。<br>
+
+好囉～所以我們要怎麼改變那個不變的state？<br>
+結果是產生的state其實是一個複製的current state加上新的data。<br>
+
+感人的是Redux操作的只是javascript的object。<br>
+所以我們的action看起來像
+```javascript
+{
+  type: 'ADD_ARTICLE',
+  payload: { name: 'React Redux Tutorial', id: 1 }
+}
+```
+
+* type: 每個action都會有type屬性來描述state該怎麼改變。
+* payload: 在上面的例子裡，payload是一篇新文章，reducer將會在之後把這篇文章加到current state。
+
+最棒的實踐方法就是將每個action都包裝在一個個的function，像這樣的function就是action creator<br>
+
+讓我們透過建立一個簡單的Redux action將所有內容放在一起吧。<br>
+
+建立action資料夾
+```bash
+mkdir -p src/js/actions
+```
+在actions內建立index.js，內容程式碼如下：
+```bash
+touch src/js/actions/index.js
+```
+```javascript
+// src/js/actions/index.js
+export const addArticle = article => ({ type: "ADD_ARTICLE", payload: article });
+```
+對，type屬性就是一串string。<br>
+reduxer將使用該string來決定怎麼計算下一個state。<br>
+由於string容易因為手殘眼花而打錯，所以最好把他先宣告成常數(constant)，<br>
+這方法有助於避免麻煩的debug。<br>
+
+所以我們來建個常數資料夾吧XD
+```bash
+mkdir -p src/js/constants
+```
+接這在constants資料夾下建立action-types.js
+```bash
+touch src/js/constants/action-types.js
+```
+內容程式碼如下：
+```javascript
+// src/js/constants/action-types.js
+export const ADD_ARTICLE = "ADD_ARTICLE";
+```
+
+接著再次打開actions下的index.js(src/js/actions/index.js)，並且更新它
+```javascript
+// src/js/actions/index.js
+import { ADD_ARTICLE } from "../constants/action-types";
+export const addArticle = article => ({ type: ADD_ARTICLE, payload: article });
+```
+我們離一個可用的Redux applicaiton只差一步啦，接下來來重構我們的reducer囉
+
+## 重構reducer
+先來概括一下Redux的主要概念
+
+* Redux store就像大腦，他負責協調Redux的所有moving parts
+* 應用程式的state單獨存在，在store內是個不可變的物件(object)
+* 當store接收到action時就會觸發reducer
+* 由reducer來回傳下個新state
+* reducer是一個javascript function，內含兩個參數
+(state和action)
+* reducer function通常有switch statement(雖然有點笨，但也可以用if/else)
+* reducer依據action type來計算下個state。此外，當沒有取到對應的action type時，至少應該要回傳initial state
+
+當action type取到對應的case時，reducer會計算下個state並回傳一個new object，範例如下：
+```javascript
+// ...
+  switch (action.type) {
+    case ADD_ARTICLE:
+      return { ...state, articles: [...state.articles, action.payload] };
+    default:
+      return state;
+  }
+// ...
+```
+
+我們之前建立的reducer不會回傳initial state，我們來修正這個問題。<br>
+打開src/js/reducers/index.js並更新程式碼如下：
+```javascript
+import { ADD_ARTICLE } from "../constants/action-types";
+const initialState = {
+  articles: []
+};
+const rootReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case ADD_ARTICLE:
+      state.articles.push(action.payload);
+      return state;
+    default:
+      return state;
+  }
+};
+export default rootReducer;
+```
+在這邊我們發現一個問題，上面的code雖然有效，但reducer打破了Redux的規則 **不變性**<br>
+
+[Array.prototype.push](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)會改變原來的array。ಠ_ಠ<br>
+好囉，push不能用啦，我們改用[Array.prototype.concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)，用concat會回傳一個新array，我們就可以不用擔心打破規則囉。＼(^o^)／
+
+再修正後的程式碼如下
+```javascript
+// ...
+switch (action.type) {
+  case ADD_ARTICLE:
+    return { ...state, articles: state.articles.concat(action.payload) };
+  default:
+    return state;
+}
+// ...
+```
+等等，我們還沒完成。使用spread運算子可以讓我們的reducer更好
+```javascript
+// ...
+switch (action.type) {
+  case ADD_ARTICLE:
+    return { ...state, articles: [...state.articles, action.payload] };
+  default:
+    return state;
+}
+// ...
+
+```
+
+在上面的例子裡，initial state完全不受影響，<br>
+初始的articles資料不會被隨意改變，初始的state也不會被更改，<br>
+產生的state也是initial state的副本，一切符合期待。<br>
+
+以下兩個key point來避免Redux突變
+* array：[Using concat(), slice(), and …spread](https://egghead.io/lessons/react-redux-avoiding-array-mutations-with-concat-slice-and-spread)
+* object：[Using Object.assign() and …spread](https://egghead.io/lessons/react-redux-avoiding-object-mutations-with-object-assign-and-spread)
 
 
+注意：object spread運算子仍在stage 3，為了避免舊瀏覽器不支援，我們必須安裝[Object rest spread transform](https://babeljs.io/docs/en/babel-plugin-transform-object-rest-spread/)
 
+```bash
+yarn add babel-plugin-transform-object-rest-spread -D
+```
+
+打開.babelrc更新設定
+```json
+{
+    "presets": ["env", "react"],
+    "plugins": ["transform-object-rest-spread"]
+}
+```
+
+> 專家建議：<br>
+> 隨著我們的app變大，reducer也會跟著一起長大。
+> 我們可以將一個大型reducer拆成多個function然後使用[combineReducers](https://redux.js.org/api/combinereducers)讓他們黏在一起
+
+下一節我們要在console中使用Redux，hold住！
 
