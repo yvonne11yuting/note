@@ -169,7 +169,6 @@ Reducer產生application的state。<br>
 * payload: 在上面的例子裡，payload是一篇新文章，reducer將會在之後把這篇文章加到current state。
 
 最棒的實踐方法就是將每個action都包裝在一個個的function，像這樣的function就是action creator<br>
-
 讓我們透過建立一個簡單的Redux action將所有內容放在一起吧。<br>
 
 建立action資料夾
