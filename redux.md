@@ -372,3 +372,272 @@ store.getState()
 ```
 {articles: Array(1)}
 ```
+以上就是Redux最簡單的形式。<br>
+這些就是你開始使用Redux時需要知道的一切
+
+當你對下一部分感到自信時，我們接下來就可以將React與Redux連接起來！
+
+## 連結React和Redux
+在我學習Redux後，我了解這沒有這麼複雜。<br>
+我知道透過getState讀取目前的state。<br>
+我知道怎麼調度action透過執行dispatch。<br>
+我知道怎麼偵聽state變換透過subscibe。<br>
+
+但...我不知道怎麼將React和Redux結合一起。 <br>
+
+Redux本身就和框架無關。你可以使用在原生javascript，或是Angular，或是React。<br>
+有一些綁定可以將Redux和你最愛的框架或library綁在一起。<br>
+
+對React來說就是react-redux<br>
+
+在繼續之前我們先來安裝react-redux，執行：
+```bash
+yarn add react-redux -D
+```
+為了示範React和Redux怎麼一起運作，我們將要建立一個超級簡單的application，而這個application由下列components組成：
+
+* 一個App component
+* 一個List component來顯示articles
+* 一個Form component來增加articles
+
+## react-redux
+[react-redux](https://redux.js.org/basics/usagewithreact)為React綁定了Redux。這是一個小型library以高效方式連結Redux和React。<br>
+
+我們將使用的最重要的方法是[connect](https://github.com/reduxjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options)<br>
+
+所以connect是用來做什麼呢？它用來 **將React component和Redux store連結接起來** 。<br>
+
+我們將會在connect用到2~3個參數，這取決於使用的case。需要知道的最基本項目有：
+* mapStateToProps function - 它將部分的Redux state連接到React component的props，這樣React component就可以讀取它所需的store。
+* mapDispatchToProps function - 它也和樓上做了類似的事，但是是對action，它連結了Redux action到React component的props，如此就可以調度action了。
+
+## App component 和 Redux store
+我們看到mapStateToProps將Redux狀態的一部分連接到React component的props。你可能想知道這是不是就可以將React和Redux連接了嗎？不，這不行。<br>
+
+要開始連結Redux和React，我們將使用[Provider](https://github.com/reduxjs/react-redux/blob/master/docs/api.md#provider-store)
+
+Provider是一個來自於react-redux的high order component。<br>
+
+使用外行的術語來說，Provider包裝了React application並且讓他收到整個Redux store<br>
+
+為什麼要這樣？我們看到在Redux中，store管理著一切。React一定要和store交涉才可以讀取到stact和執行action。<br>
+
+理論講完了。接下來打開src/js/index.js檔案，清除所有的內容並更新成以下程式碼：
+```javascript
+import React from "react";
+import { render } from "react-dom";
+import { Provider } from "react-redux";
+import store from "./store/index";
+import App from "./components/App";
+render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById("app")
+);
+```
+
+我們可以看到Provider把所有的React application包起來，甚至它把store作為prop。<br>
+
+現在我們可以建立一個App component，它需要import一個List component並render他自己。<br>
+
+為放置components建一個資料夾
+```bash
+mkdir -p src/js/components
+```
+
+增加一個新檔案，檔名為App.js放在src/js/components下。
+```javascript
+// src/js/components/App.js
+import React from "react";
+import List from "./List";
+const App = () => (
+  <div className="row mt-5">
+    <div className="col-md-4 offset-md-1">
+    <h2>Articles</h2>
+      <List />
+    </div>
+  </div>
+);
+export default App;
+```
+花點時間看看沒有html標籤的component
+```javascript
+import React from "react";
+import List from "./List";
+const App = () => (
+      <List />
+);
+export default App;
+```
+接著我們就可以開始建立List囉
+
+## List component和Redux state
+
+我們目前為止沒做什麼特別的事。<br>
+但我們的新component List將會和Redux store互動。<br>
+簡單的回顧一下：將React和Redux連接的關鍵點是connect，connect至少需要一個參數。<br>
+
+由於我們希望List可以得到articles列表，所以我們需要將state.articles和component連接起來。<br>
+如何辦到，我們使用 **mapStateToProps** <br>
+
+建立一個名為List.js的檔案，放在src/js/components下。裡面的程式碼為：
+```javascript
+// src/js/components/List.js
+import React from "react";
+import { connect } from "react-redux";
+const mapStateToProps = state => {
+  return { articles: state.articles };
+};
+const ConnectedList = ({ articles }) => (
+  <ul className="list-group list-group-flush">
+    {articles.map(el => (
+      <li className="list-group-item" key={el.id}>
+        {el.title}
+      </li>
+    ))}
+  </ul>
+);
+const List = connect(mapStateToProps)(ConnectedList);
+export default List;
+```
+List component從props收到了副本articles array，<br>
+這個array存在在我們之前建立的Redux state，它來自於reducer。(src/js/reducers/index.js)
+
+```javascript
+const initialState = {
+  articles: []
+};
+const rootReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case ADD_ARTICLE:
+      return { ...state, articles: [...state.articles, action.payload] };
+    default:
+      return state;
+  }
+};
+```
+
+然後在JSX內使用prop來產生articles列表。
+```javascript
+{articles.map(el => (
+  <li className="list-group-item" key={el.id}>
+    {el.title}
+  </li>
+))}
+```
+React專家提示：養成習慣驗證props透過PropTypes。<br>
+最後component將會匯出List，List是一個沒有state的component 透過Redux store連結List。<br>
+
+一個沒有state的component所有data都是透過props傳入。
+
+本篇著重點就是connect和mapStateToProps
+
+## Form component和Redux actions
+Form component會比List component更複雜一些。這個表單會為我們的application增加一些新項目。<br>
+
+此外，他是個有local state的component。<br>
+喔對我們之前不是提到要用store來管理所有state，那怎麼還會有什麼local state呢？<br>
+即使有用Redux，要擁有個具有local state的componet也是沒問題的。<br>
+並不是每個application state都要進到Redux管理。<br>在這個例子裡我不希望其他component知道Form的local state，這完全沒問題！<br>
+所以這個component有什麼作用呢？<br>
+這個component包含一些在Form submit時更新local state的邏輯。<br>
+另外，它接收Redux的action作為props。如此我們可以藉由調度執行addArticle action更新全局state。<br>
+在src/js/components建立一個新檔案Form.js，程式碼如下：
+```javascript
+// src/js/components/Form.js
+import React, { Component } from "react";
+import { connect } from "react-redux";
+import uuidv1 from "uuid";
+import { addArticle } from "../actions/index";
+const mapDispatchToProps = dispatch => {
+  return {
+    addArticle: article => dispatch(addArticle(article))
+  };
+};
+class ConnectedForm extends Component {
+  constructor() {
+    super();
+    this.state = {
+      title: ""
+    };
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+  handleChange(event) {
+    this.setState({ [event.target.id]: event.target.value });
+  }
+  handleSubmit(event) {
+    event.preventDefault();
+    const { title } = this.state;
+    const id = uuidv1();
+    this.props.addArticle({ title, id });
+    this.setState({ title: "" });
+  }
+  render() {
+    const { title } = this.state;
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="title">Title</label>
+          <input
+            type="text"
+            className="form-control"
+            id="title"
+            value={title}
+            onChange={this.handleChange}
+          />
+        </div>
+        <button type="submit" className="btn btn-success btn-lg">
+          SAVE
+        </button>
+      </form>
+    );
+  }
+}
+const Form = connect(null, mapDispatchToProps)(ConnectedForm);
+export default Form;
+```
+除了mapDispatchToProps和connect之後，其它都是標準的React東西。<br>
+mapDispatchToProps把Redux actions連接到React props。這個方式讓我們可以調度action。<br>
+所以我們可以看到action在handleSubmit中被呼叫
+```javascript
+// ...
+  handleSubmit(event) {
+    event.preventDefault();
+    const { title } = this.state;
+    const id = uuidv1();
+    this.props.addArticle({ title, id }); // Relevant Redux part!!
+// ...
+  }
+// ...
+```
+注意：當沒有mapStateToProps的時候，第一個參數必為 **null**，否則將會拿到```TypeError: dispatch is not a function```這個錯誤訊息。<br>
+
+component都設定完成囉，接下來更新App.js讓他import Form component
+```javascript
+import React from "react";
+import List from "./List";
+import Form from "./Form";
+const App = () => (
+  <div className="row mt-5">
+    <div className="col-md-4 offset-md-1">
+      <h2>Articles</h2>
+      <List />
+    </div>
+    <div className="col-md-4 offset-md-1">
+      <h2>Add a new article</h2>
+      <Form />
+    </div>
+  </div>
+);
+export default App;
+```
+Form component內使用了uuid(通用唯一識別碼)來作為唯一值，所以我們來安裝它吧
+```bash
+yarn add uuid -D
+```
+然後就可以執行webpack dev server啦
+```bash
+yarn start
+```
