@@ -2,6 +2,18 @@
 這邊參考Valentino Gagliardi的[React Redux Tutorial for Beginners: The Definitive Guide](https://www.valentinog.com/blog/react-redux-tutorial-beginners/)<br>
 這篇從觀念開始帶入，讓學習者可以反思學習redux的價值和意義而不是盲目跟風。
 
+## 節錄關鍵字
+* ```Provider```: 把整個React apllication包起來，讓裡面全部的component都可以讀取到store的資源
+* ```store```: 大腦擔當，協調Redux內所有moving parts
+* ```createStore```: 一個function來建立Redux store，內部的參數為reducer
+* ```reducer```: 產生application的state。為一個function，內含2個參數(state和action)，他會依據action type來計算新的state，當沒有對應的action type時會回傳initial state。
+* ```combineReducers```: 管理多個reducer。
+* ```action```: 改變state的唯一方法是向store發送信號，那個信號就是 action。"Dispatching an action"就是發送信號的過程。
+* ```connect```: 將React component和Redux store連結接起來。
+* ```mapStateToProps ```: 它將部分的Redux state連接到React component的props，這樣React component就可以讀取它所需的store。
+* ```mapDispatchToProps```: 它也和樓上做了類似的事，但是是對action，它連結了Redux action到React component的props，這樣就可以調度action了。
+
+
 ## 一個小小的React開發環境
 Valentino Gagliardi提供了一個建置好了github repo
 ```bash
@@ -99,8 +111,8 @@ import rootReducer from "../reducers/index";
 const store = createStore(rootReducer);
 export default store;
 ```
-* **createStore**是一個function來建立Redux store
-* createStore將 **reducer** 作為第一個參數，在我們的case內即 **rootReducer**
+* ```createStor```是一個function來建立Redux store
+* createStore將 ```reducer``` 作為第一個參數，在我們的case內即 **rootReducer**
 
 你還可以將初始狀態(initial state)傳遞給createStore。但大多數時候你不必這樣做。<br>
 傳遞初始化狀態對 **伺服器渲染(server side rendering, SSR)** 很有用。<br>
@@ -641,3 +653,4 @@ yarn add uuid -D
 ```bash
 yarn start
 ```
+大功告成，當在input增加新item按下SAVE後，Articles就會透過action增加一筆新資料。<br>
