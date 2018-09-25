@@ -12,7 +12,7 @@
 * ```connect```: 將React component和Redux store連結接起來。
 * ```mapStateToProps ```: 它將部分的Redux state連接到React component的props，這樣React component就可以讀取它所需的store。
 * ```mapDispatchToProps```: 它也和樓上做了類似的事，但是是對action，它連結了Redux action到React component的props，這樣就可以調度action了。
-
+* ```Middleware```: 一個function，依action(type, payload etc.)指示採取行動。
 
 ## 一個小小的React開發環境
 Valentino Gagliardi提供了一個建置好了github repo
